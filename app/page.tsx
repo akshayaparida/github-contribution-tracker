@@ -1,101 +1,195 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { Github} from "lucide-react";
+
+// Helper function to determine PR status
+const getPRStatus = (pr: { merged_at: string | null; state: string }) => {
+  if (pr.merged_at) return "Merged";
+  return pr.state.charAt(0).toUpperCase() + pr.state.slice(1);
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [username, setUsername] = useState("");
+  const [results, setResults] = useState<{ issues: any[]; prs: any[] } | null>(
+    null
+  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!username.trim()) return;
+
+    setLoading(true);
+    setError("");
+    setResults(null);
+
+    try {
+      const res = await fetch(`/api/github?username=${username}`);
+      if (!res.ok) throw new Error("Failed to fetch data");
+
+      const data = await res.json();
+      setResults(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate contribution summary
+  const contributionSummary = results
+    ? {
+        totalIssues: results.issues.length,
+        openIssues: results.issues.filter((issue) => issue.state === "open")
+          .length,
+        closedIssues: results.issues.filter((issue) => issue.state === "closed")
+          .length,
+        totalPRs: results.prs.length,
+        openPRs: results.prs.filter((pr) => pr.state === "open").length,
+        mergedPRs: results.prs.filter((pr) => pr.merged_at).length,
+      }
+    : null;
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-6">
+      <div className="max-w-4xl w-full bg-white shadow-lg rounded-xl p-6 relative">
+        {username && (
           <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href={`https://github.com/${username}`}
             target="_blank"
             rel="noopener noreferrer"
+            className="absolute top-5 right-5"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+            <Github size={24} />
           </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        )}
+
+        <h1 className="text-2xl font-bold text-center flex items-center gap-2 justify-center underline decoration-pink-400">
+          <Github size={28} />
+          GitHub Contribution Tracker
+        </h1>
+
+        <form onSubmit={handleSearch} className="mt-4 flex gap-2">
+          <input
+            type="text"
+            placeholder="Enter GitHub username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="border p-3 flex-1 rounded-xl focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            className="bg-gray-800 text-white px-4 py-2 rounded-xl hover:bg-gray-500 transition"
           >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            Search
+          </button>
+        </form>
+
+        {loading && <p className="text-center mt-4">Fetching contributions...</p>}
+        {error && <p className="text-center text-red-500 mt-4">{error}</p>}
+
+        {contributionSummary && (
+          <div className="mt-6 p-4 bg-gray-100 rounded-lg">
+            <h2 className="text-lg font-semibold underline decoration-pink-500">Contribution Summary</h2>
+            <p className="text-sm">
+              <strong>Issues:</strong> {contributionSummary.totalIssues} total (
+              {contributionSummary.openIssues} open, {contributionSummary.closedIssues} closed)
+            </p>
+            <p className="text-sm">
+              <strong>Pull Requests:</strong> {contributionSummary.totalPRs} total (
+              {contributionSummary.openPRs} open, {contributionSummary.mergedPRs} merged)
+            </p>
+          </div>
+        )}
+
+        {results && (
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <section>
+              <h2 className="text-xl font-semibold text-center">Issues</h2>
+              <div className="mt-2 space-y-2">
+                {results.issues.length === 0 ? (
+                  <p className="text-center">No issues found.</p>
+                ) : (
+                  results.issues.map((issue) => (
+                    <div key={issue.id} className="p-3 bg-gray-100 rounded-lg">
+                      <a
+                        href={issue.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium flex items-center gap-1 underline decoration-pink-500"
+                      >
+                        {issue.title} 
+                      </a>
+                      <p className="text-sm">Status: {issue.state}</p>
+                      <p className="text-xs">
+                        Created: {new Date(issue.created_at).toLocaleDateString()}
+                      </p>
+                      {issue.closed_at && (
+                        <p className="text-xs">
+                          Closed: {new Date(issue.closed_at).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-xl font-semibold text-center">Pull Requests</h2>
+              <div className="mt-2 space-y-2">
+                {results.prs.length === 0 ? (
+                  <p className="text-center">No pull requests found.</p>
+                ) : (
+                  results.prs.map((pr) => (
+                    <div key={pr.id} className="p-3 bg-gray-100 rounded-lg">
+                      <a
+                        href={pr.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium flex items-center gap-1 underline decoration-pink-500"
+                      >
+                        {pr.title} 
+                      </a>
+                      <p className="text-sm">Status: {getPRStatus(pr)}</p>
+                      <p className="text-xs">
+                        Created: {new Date(pr.created_at).toLocaleDateString()}
+                      </p>
+                      {pr.merged_at && (
+                        <p className="text-xs">
+                          Merged: {new Date(pr.merged_at).toLocaleDateString()}
+                        </p>
+                      )}
+                      {!pr.merged_at && pr.state === "closed" && (
+                        <p className="text-xs">
+                          Closed: {new Date(pr.updated_at).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+          </div>
+        )}
+
+        <footer className="mt-6 p-4 bg-gray-100 rounded-lg">
+          <p className="text-center text-sm">
+            Check out GitHub profile of{" "}
+            <a
+              href="https://github.com/akshayaparida"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              Akshaya Parida
+            </a>{" "}
+            for more projects and contributions.
+          </p>
+        </footer>
+      </div>
     </div>
   );
 }
