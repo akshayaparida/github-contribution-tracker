@@ -1,19 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { Github} from "lucide-react";
+import { Github } from "lucide-react";
+import {
+  GitHubResults,
+  GitHubPullRequest,
+  ContributionSummary,
+} from "./types/github";
 
 // Helper function to determine PR status
-const getPRStatus = (pr: { merged_at: string | null; state: string }) => {
+const getPRStatus = (pr: GitHubPullRequest) => {
   if (pr.merged_at) return "Merged";
   return pr.state.charAt(0).toUpperCase() + pr.state.slice(1);
 };
 
 export default function Home() {
   const [username, setUsername] = useState("");
-  const [results, setResults] = useState<{ issues: any[]; prs: any[] } | null>(
-    null
-  );
+  const [results, setResults] = useState<GitHubResults | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,7 +42,7 @@ export default function Home() {
   };
 
   // Calculate contribution summary
-  const contributionSummary = results
+  const contributionSummary: ContributionSummary | null = results
     ? {
         totalIssues: results.issues.length,
         openIssues: results.issues.filter((issue) => issue.state === "open")
@@ -87,19 +90,25 @@ export default function Home() {
           </button>
         </form>
 
-        {loading && <p className="text-center mt-4">Fetching contributions...</p>}
+        {loading && (
+          <p className="text-center mt-4">Fetching contributions...</p>
+        )}
         {error && <p className="text-center text-red-500 mt-4">{error}</p>}
 
         {contributionSummary && (
           <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-            <h2 className="text-lg font-semibold underline decoration-pink-500">Contribution Summary</h2>
+            <h2 className="text-lg font-semibold underline decoration-pink-500">
+              Contribution Summary
+            </h2>
             <p className="text-sm">
               <strong>Issues:</strong> {contributionSummary.totalIssues} total (
-              {contributionSummary.openIssues} open, {contributionSummary.closedIssues} closed)
+              {contributionSummary.openIssues} open,{" "}
+              {contributionSummary.closedIssues} closed)
             </p>
             <p className="text-sm">
-              <strong>Pull Requests:</strong> {contributionSummary.totalPRs} total (
-              {contributionSummary.openPRs} open, {contributionSummary.mergedPRs} merged)
+              <strong>Pull Requests:</strong> {contributionSummary.totalPRs}{" "}
+              total ({contributionSummary.openPRs} open,{" "}
+              {contributionSummary.mergedPRs} merged)
             </p>
           </div>
         )}
@@ -120,15 +129,17 @@ export default function Home() {
                         rel="noopener noreferrer"
                         className="font-medium flex items-center gap-1 underline decoration-pink-500"
                       >
-                        {issue.title} 
+                        {issue.title}
                       </a>
                       <p className="text-sm">Status: {issue.state}</p>
                       <p className="text-xs">
-                        Created: {new Date(issue.created_at).toLocaleDateString()}
+                        Created:{" "}
+                        {new Date(issue.created_at).toLocaleDateString()}
                       </p>
                       {issue.closed_at && (
                         <p className="text-xs">
-                          Closed: {new Date(issue.closed_at).toLocaleDateString()}
+                          Closed:{" "}
+                          {new Date(issue.closed_at).toLocaleDateString()}
                         </p>
                       )}
                     </div>
@@ -138,7 +149,9 @@ export default function Home() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold text-center">Pull Requests</h2>
+              <h2 className="text-xl font-semibold text-center">
+                Pull Requests
+              </h2>
               <div className="mt-2 space-y-2">
                 {results.prs.length === 0 ? (
                   <p className="text-center">No pull requests found.</p>
@@ -151,7 +164,7 @@ export default function Home() {
                         rel="noopener noreferrer"
                         className="font-medium flex items-center gap-1 underline decoration-pink-500"
                       >
-                        {pr.title} 
+                        {pr.title}
                       </a>
                       <p className="text-sm">Status: {getPRStatus(pr)}</p>
                       <p className="text-xs">
