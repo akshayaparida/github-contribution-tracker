@@ -24,11 +24,13 @@ export interface GitHubIssue {
     prs: GitHubPullRequest[];
   }
   
-  export interface ContributionSummary {
+  export type ContributionSummary = {
     totalIssues: number;
     openIssues: number;
     closedIssues: number;
     totalPRs: number;
     openPRs: number;
-    mergedPRs: number;
-  }
+   closedPRs: number; // Includes both merged & non-merged closed PRs
+   
+  };
+  

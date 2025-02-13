@@ -41,19 +41,20 @@ export default function Home() {
     }
   };
 
-  // Calculate contribution summary
   const contributionSummary: ContributionSummary | null = results
-    ? {
-        totalIssues: results.issues.length,
-        openIssues: results.issues.filter((issue) => issue.state === "open")
-          .length,
-        closedIssues: results.issues.filter((issue) => issue.state === "closed")
-          .length,
-        totalPRs: results.prs.length,
-        openPRs: results.prs.filter((pr) => pr.state === "open").length,
-        mergedPRs: results.prs.filter((pr) => pr.merged_at).length,
-      }
-    : null;
+  ? {
+      totalIssues: results.issues.length,
+      openIssues: results.issues.filter((issue) => issue.state === "open").length,
+      closedIssues: results.issues.filter((issue) => issue.state === "closed").length,
+      totalPRs: results.prs.length,
+      openPRs: results.prs.filter((pr) => pr.state === "open").length,
+      closedPRs: results.prs.filter((pr) => pr.state === "closed").length, // Includes both merged & non-merged closed PRs
+    }
+  : null;
+
+
+
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6">
@@ -106,10 +107,9 @@ export default function Home() {
               {contributionSummary.closedIssues} closed)
             </p>
             <p className="text-sm">
-              <strong>Pull Requests:</strong> {contributionSummary.totalPRs}{" "}
-              total ({contributionSummary.openPRs} open,{" "}
-              {contributionSummary.mergedPRs} merged)
-            </p>
+  <strong>Pull Requests:</strong> {contributionSummary.totalPRs} total (
+  {contributionSummary.openPRs} open, {contributionSummary.closedPRs} closed)
+</p>
           </div>
         )}
 
